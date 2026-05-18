@@ -1,32 +1,32 @@
 
-{ þ Inquisition's Timer Services Unit þ }
+{ ï¿½ Inquisition's Timer Services Unit ï¿½ }
 
-{ þ This file is part of the Inquisition Sound Server for the Free þ }
-{ þ Pascal Compiler (http://www.freepascal.org) but also can be    þ }
-{ þ be distributed separately. The source code is FREE FOR ANY NON þ }
-{ þ COMMERCIAL USAGE.                                              þ }
-{ þ You can modify this file, but you musn't distribute the        þ }
-{ þ modified file, only the original version. Instead, send your   þ }
-{ þ modification to us, so we can add it to the official version.  þ }
-{ þ Please note, that we can't quarantee the compatibility with    þ }
-{ þ previous versions.                                             þ }
-{ þ If we'll stop the development of this unit in the future,      þ }
-{ þ the source code will be freely available for any use.          þ }
+{ ï¿½ This file is part of the Inquisition Sound Server for the Free ï¿½ }
+{ ï¿½ Pascal Compiler (http://www.freepascal.org) but also can be    ï¿½ }
+{ ï¿½ be distributed separately. The source code is FREE FOR ANY NON ï¿½ }
+{ ï¿½ COMMERCIAL USAGE.                                              ï¿½ }
+{ ï¿½ You can modify this file, but you musn't distribute the        ï¿½ }
+{ ï¿½ modified file, only the original version. Instead, send your   ï¿½ }
+{ ï¿½ modification to us, so we can add it to the official version.  ï¿½ }
+{ ï¿½ Please note, that we can't quarantee the compatibility with    ï¿½ }
+{ ï¿½ previous versions.                                             ï¿½ }
+{ ï¿½ If we'll stop the development of this unit in the future,      ï¿½ }
+{ ï¿½ the source code will be freely available for any use.          ï¿½ }
 
-{ þ You can always download the newest version from our website,  þ }
-{ þ http://scenergy.dfmk.hu/inqcoders/                            þ }
-{ þ About Inquisition itself, see                                 þ }
-{ þ http://scenergy.dfmk.hu/inquisition/                          þ }
+{ ï¿½ You can always download the newest version from our website,  ï¿½ }
+{ ï¿½ http://scenergy.dfmk.hu/inqcoders/                            ï¿½ }
+{ ï¿½ About Inquisition itself, see                                 ï¿½ }
+{ ï¿½ http://scenergy.dfmk.hu/inquisition/                          ï¿½ }
 
-{ þ Comments, notes, suggestions, bug reports are welcome.      þ }
-{ þ Send your mails to charlie@scenergy.dfmk.hu                 þ }
-{ þ Please prefer hungarian or english languages.               þ }
+{ ï¿½ Comments, notes, suggestions, bug reports are welcome.      ï¿½ }
+{ ï¿½ Send your mails to charlie@scenergy.dfmk.hu                 ï¿½ }
+{ ï¿½ Please prefer hungarian or english languages.               ï¿½ }
 
-{ þ ISS_TIM - Timer Unit (GO32V2 Only!)      þ }
-{ þ Coding Starts     : 10. October. 1998.   þ }
-{ þ Last Modification : 01. March. 2001.     þ }
+{ ï¿½ ISS_TIM - Timer Unit (GO32V2 Only!)      ï¿½ }
+{ ï¿½ Coding Starts     : 10. October. 1998.   ï¿½ }
+{ ï¿½ Last Modification : 01. March. 2001.     ï¿½ }
 
-{ þ Note: req. FPC version 1.0.0+ for GO32V2 to compile þ }
+{ ï¿½ Note: req. FPC version 1.0.0+ for GO32V2 to compile ï¿½ }
 
 {$ASMMODE INTEL}
 {$MODE FPC}
@@ -37,29 +37,31 @@ Interface
 Uses GO32;
 
 Const ISS_TimerSpeed  : DWord = 1193180;
-      ISS_MaxTimers   = $8; { þ Maximum Number of Timers  þ }
+      ISS_MaxTimers   = $8; { ï¿½ Maximum Number of Timers  ï¿½ }
 
-      TimerIRQ        = $8; { þ HW IRQ Number þ }
+      TimerIRQ        = $8; { ï¿½ HW IRQ Number ï¿½ }
 
-      ISS_TENoFree   = $01; { þ Can't add new timer. All timers locked. þ }
-      ISS_TENotFound = $02; { þ Can't find specified Timer, to stop. þ }
+      ISS_TENoFree   = $01; { ï¿½ Can't add new timer. All timers locked. ï¿½ }
+      ISS_TENotFound = $02; { ï¿½ Can't find specified Timer, to stop. ï¿½ }
 
 Type TTimerStruc = Record
        TSpeed     : DWord;
-       TCount     : DWord;     { þ Tick Counter þ }
-       TPrevCount : DWord;     { þ Tick Counter state at prev. activity þ }
-       TProc      : Pointer;   { þ Procedure To Call Offset þ }
-       TActive    : Boolean;   { þ 1 If The Timer Is On þ }
+       TCount     : DWord;     { ï¿½ Tick Counter ï¿½ }
+       TPrevCount : DWord;     { ï¿½ Tick Counter state at prev. activity ï¿½ }
+       TProc      : Pointer;   { ï¿½ Procedure To Call Offset ï¿½ }
+       TActive    : Boolean;   { ï¿½ 1 If The Timer Is On ï¿½ }
       End;
 
 Var ISS_TimersData : Array[1..ISS_MaxTimers] Of TTimerStruc;
-    ISS_TimerError : DWord; { þ Contains the last timer error code. þ }
+    ISS_TimerError : DWord; { ï¿½ Contains the last timer error code. ï¿½ }
 
 Function ISS_StartTimer(Var NewTProc : Pointer; NewTSpeed : DWord) : Boolean;
 Function ISS_StopTimer(Var TimerProc : Pointer) : Boolean;
 Function ISS_GetTimerNumber(TimerProc : Pointer) : DWord;
 
 Implementation
+
+Var IntStack        : array[0..4095] of byte;
 
 Var TimerSpeed      : DWord;
     OldTimer        : TSegInfo;
@@ -80,7 +82,7 @@ Begin
        If (TCount>TSpeed) Then Begin
          Dec(TCount,TSpeed);
          TPrevCount:=TCount;
-         Proc(TProc); { þ Calling the specified routine þ }
+         Proc(TProc); { ï¿½ Calling the specified routine ï¿½ }
         End;
       End;
     End;
@@ -96,7 +98,16 @@ Asm
   PUSH   FS
   PUSH   GS
   PUSHAD
+
+  { with DPMI, the stack is not DS/ES, but a minimal 4K locked pm stack dedicated for interrupts, switch to DS }
+  MOV    CX, SS
+  MOV    EDX, ESP
   MOV    AX,CS:[BackupDS]
+  MOV    SS, AX
+  LEA    ESP, IntStack+4096
+  PUSH   CX
+  PUSH   EDX
+
   MOV    DS,AX
   MOV    ES,AX
   MOV    AX,DosMemSelector
@@ -126,9 +137,16 @@ Asm
     @Timer_3:
 
   @NotUpdateClock:
-  MOV   DX,$20 { þ Interrupt request acknowledge þ }
+  MOV   DX,$20 { ï¿½ Interrupt request acknowledge ï¿½ }
   MOV   AL,$20
   OUT   DX,AL
+
+  {restore old stack}
+  POP   EDX
+  POP   CX
+  MOV   SS, CX
+  MOV   ESP, EDX
+
   POPAD
   POP   GS
   POP   FS
@@ -256,20 +274,20 @@ Begin
  NewIRQActive:=False;
  TimerSpeed:=0;
 End.
-{ þ ISS_TIM.PAS - (C) 1998-2001 Charlie/Inquisition þ }
+{ ï¿½ ISS_TIM.PAS - (C) 1998-2001 Charlie/Inquisition ï¿½ }
 
-{ þ Changelog : þ }
-{ þ 1.1.1 - Some code cleanup for less compiler hacking...                þ }
-{ þ       - Webpage and email addresses fixed in the header comment.      þ }
-{ þ         [01.march.2001]                                               þ }
-{ þ 1.1.0 - Major update, a new IRQ routine which contains less compiler  þ }
-{ þ         hacking. Based on the docs of FPC 1.0.2. Not tested with      þ }
-{ þ         versions below 1.0.0. GNU AS no longer required to compile.   þ }
-{ þ         [03.december.2000]                                            þ }
-{ þ 1.0.2 - Header comment fixed.                                         þ }
-{ þ         [18.apr.2000]                                                 þ }
-{ þ 1.0.1 - Removed a limitation which made smartlinking impossible.      þ }
-{ þ         (Reported by Surgi/Terror Opera)                              þ }
-{ þ         [13.apr.2000]                                                 þ }
-{ þ 1.0.0 - First Public Version                                          þ }
-{ þ         [08.jan.2000]                                                 þ }
+{ ï¿½ Changelog : ï¿½ }
+{ ï¿½ 1.1.1 - Some code cleanup for less compiler hacking...                ï¿½ }
+{ ï¿½       - Webpage and email addresses fixed in the header comment.      ï¿½ }
+{ ï¿½         [01.march.2001]                                               ï¿½ }
+{ ï¿½ 1.1.0 - Major update, a new IRQ routine which contains less compiler  ï¿½ }
+{ ï¿½         hacking. Based on the docs of FPC 1.0.2. Not tested with      ï¿½ }
+{ ï¿½         versions below 1.0.0. GNU AS no longer required to compile.   ï¿½ }
+{ ï¿½         [03.december.2000]                                            ï¿½ }
+{ ï¿½ 1.0.2 - Header comment fixed.                                         ï¿½ }
+{ ï¿½         [18.apr.2000]                                                 ï¿½ }
+{ ï¿½ 1.0.1 - Removed a limitation which made smartlinking impossible.      ï¿½ }
+{ ï¿½         (Reported by Surgi/Terror Opera)                              ï¿½ }
+{ ï¿½         [13.apr.2000]                                                 ï¿½ }
+{ ï¿½ 1.0.0 - First Public Version                                          ï¿½ }
+{ ï¿½         [08.jan.2000]                                                 ï¿½ }
