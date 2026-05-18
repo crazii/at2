@@ -61,6 +61,8 @@ Function ISS_GetTimerNumber(TimerProc : Pointer) : DWord;
 
 Implementation
 
+Var IntStack        : array[0..4095] of byte;
+
 Var TimerSpeed      : DWord;
     OldTimer        : TSegInfo;
     OldTimerCnt     : DWord;
@@ -96,7 +98,16 @@ Asm
   PUSH   FS
   PUSH   GS
   PUSHAD
+
+  { with DPMI, the stack is not DS/ES, but a minimal 4K locked pm stack dedicated for interrupts, switch to DS }
+  MOV    CX, SS
+  MOV    EDX, ESP
   MOV    AX,CS:[BackupDS]
+  MOV    SS, AX
+  LEA    ESP, IntStack+4096
+  PUSH   CX
+  PUSH   EDX
+
   MOV    DS,AX
   MOV    ES,AX
   MOV    AX,DosMemSelector
@@ -129,6 +140,13 @@ Asm
   MOV   DX,$20 { þ Interrupt request acknowledge þ }
   MOV   AL,$20
   OUT   DX,AL
+
+  {restore old stack}
+  POP   EDX
+  POP   CX
+  MOV   SS, CX
+  MOV   ESP, EDX
+
   POPAD
   POP   GS
   POP   FS
